@@ -1,4 +1,4 @@
- import unreal
+import unreal
 
 # --- Настройки ---
 shot_name = "Shot_010"
@@ -30,18 +30,19 @@ for sub_level in sub_levels:
 # --- Создаём секвенции ---
 asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
 seq_factory = unreal.LevelSequenceFactoryNew()
-main_seq = asset_tools.create_asset(f"{shot_name}_Main", f"{base_path}/Sequences", None, seq_factory)
 
-# --- Саб-секвенции и добавление в основную ---
-sub_seqs = []
+# Создаём основную секвенцию и сразу сохраняем
+main_seq = asset_tools.create_asset(f"{shot_name}_Main", f"{base_path}/Sequences", None, seq_factory)
+unreal.EditorAssetLibrary.save_loaded_asset(main_seq)
+
+# Добавляем трек для саб-секвенций
+track = main_seq.add_master_track(unreal.MovieSceneSubTrack)
+
+# Создаём саб-секвенции, сохраняем и добавляем в трек основной секвенции
 for sub in level_names:
     sub_seq = asset_tools.create_asset(f"{shot_name}_{sub}", f"{base_path}/Sequences", None, seq_factory)
-    sub_seqs.append(sub_seq.get_path_name())
+    unreal.EditorAssetLibrary.save_loaded_asset(sub_seq)
+    track.add_sequence(sub_seq)
 
-# --- Добавляем SubSequence Track ---
-main_seq_asset = unreal.load_asset(main_seq.get_path_name())
-track = main_seq_asset.add_master_track(unreal.MovieSceneSubTrack)
-for sub_seq_path in sub_seqs:
-    sub_seq_asset = unreal.load_asset(sub_seq_path)
-    section = track.add_sequence(sub_seq_asset)
-main_seq_asset.save_asset()
+# Сохраняем основную секвенцию с добавленными саб-секвенциями
+unreal.EditorAssetLibrary.save_loaded_asset(main_seq)
